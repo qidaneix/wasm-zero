@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { pyodideReadyPromise } from "./pyodide/index.tsx";
+const pyodide = await pyodideReadyPromise;
+pyodide.globals.set("square", (x) => x * x);
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [value, setValue] = useState("sum([1, 2, 3, 4, 5])");
+  const [result, setResult] = useState("");
+
+  const evaluatePython = async () => {
+    try {
+      const output = pyodide.runPython(value);
+      console.log(typeof output, output);
+      console.log(
+        typeof pyodide.globals.get("x").toJs(),
+        pyodide.globals.get("x").toJs()
+      );
+      setResult(output);
+    } catch (err) {
+      setResult(JSON.stringify(err));
+    }
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+      <p>
+        You can execute any Python code. Just enter something in the box below
+        and click the button.
       </p>
+      <textarea
+        id="code"
+        value={value}
+        onInput={(e) => setValue(e.currentTarget.value)}
+      />
+      <button onClick={evaluatePython}>Run</button>
+      <br />
+      <br />
+      <div>Output:</div>
+      <textarea value={result} style={{ width: "100%" }} rows={6} readOnly />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
